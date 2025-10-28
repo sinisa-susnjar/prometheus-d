@@ -22,11 +22,20 @@ void main()
   auto gauge = new Gauge("cpu_usage_percent", "Simulated CPU usage");
   auto hist = new Histogram("response_time_seconds", "Response time", [0.1, 0.5, 1, 2, 5, 10]);
   auto summary = new Summary("response_latency", "Observed latency", 100);
+  auto info = new Gauge("server_info", "Server information", [
+    "account": "#123456789",
+    "type": "DEMO",
+    "server": "Darwinex-Demo",
+    "company": "Tradeslide Trading Tech Limited",
+    "ccy": "EUR",
+    "stop_out_mode": "%"
+  ]);
 
   reg.add(counter);
   reg.add(gauge);
   reg.add(hist);
   reg.add(summary);
+  reg.add(info);
 
   // Background metric updates
   new Thread({ serveMetrics(reg); }).start();
