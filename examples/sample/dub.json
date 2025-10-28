@@ -10,5 +10,18 @@
     "prometheus-d": {
       "path": "../../"
     }
-  }
+  },
+  "configurations": [
+    {
+      "name": "exe",
+      "targetType": "executable"
+    },
+    {
+      "name": "asan",
+      "targetType": "executable",
+      "dflags": [
+        "-fsanitize=address"
+      ]
+    }
+  ]
 }
