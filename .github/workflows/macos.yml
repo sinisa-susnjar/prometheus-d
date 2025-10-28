@@ -1,0 +1,31 @@
+name: macos
+
+on:
+  push:
+    branches:
+    - main
+    - dev
+
+jobs:
+  build:
+    runs-on: ${{matrix.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-latest ]
+        dc: [ ldc-latest ]
+
+    name: "${{matrix.os}}:${{matrix.dc}}"
+
+    steps:
+    - uses: actions/checkout@v7.0.1
+    - uses: dlang-community/setup-dlang@v2
+
+    - name: 'Build & Test'
+      env:
+        SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+      run: |
+        # Build the project, without unittests
+        dub build -b release --compiler=$DC
+        # Build and run tests
+        dub test -b unittest-cov --compiler=$DC

@@ -1,0 +1,31 @@
+name: windows
+
+on:
+  push:
+    branches:
+    - main
+    - dev
+
+jobs:
+  build:
+    runs-on: ${{matrix.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ windows-latest ]
+        dc: [ ldc-latest, dmd-latest ]
+
+    name: "${{matrix.os}}:${{matrix.dc}}"
+
+    steps:
+    - uses: actions/checkout@v7.0.1
+    - uses: dlang-community/setup-dlang@v2
+
+    - name: 'Build & Test'
+      env:
+        SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+      run: |
+        # Build the project, without unittests
+        dub build -b release --compiler=$env:DC
+        # Build and run tests
+        dub test -b unittest-cov --compiler=$env:DC

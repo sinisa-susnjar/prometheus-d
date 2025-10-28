@@ -1,0 +1,26 @@
+{
+  "authors": [
+    "Sinisa Susnjar"
+  ],
+  "copyright": "Copyright © 2026, Sinisa Susnjar",
+  "description": "Prometheus collector and metrics in D without any external dependencies.",
+  "license": "MIT",
+  "name": "prometheus-d",
+  "configurations": [
+    {
+      "name": "lib",
+      "targetType": "staticLibrary"
+    },
+    {
+      "name": "shared",
+      "targetType": "dynamicLibrary"
+    },
+    {
+      "name": "asan",
+      "targetType": "staticLibrary",
+      "dflags": [
+        "-fsanitize=address"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "authors": [
+    "Sinisa Susnjar"
+  ],
+  "copyright": "Copyright © 2025, Sinisa Susnjar",
+  "description": "Sample prometheus metrics.",
+  "license": "MIT",
+  "name": "sample",
+  "dependencies": {
+    "prometheus-d": {
+      "path": "../../"
+    }
+  },
+  "configurations": [
+    {
+      "name": "exe",
+      "targetType": "executable"
+    },
+    {
+      "name": "asan",
+      "targetType": "executable",
+      "dflags": [
+        "-fsanitize=address"
+      ]
+    }
+  ]
+}
