@@ -2,7 +2,8 @@ module prometheus.server;
 
 import std.socket;
 import std.string;
-import std.stdio;
+
+// import std.stdio;
 import std.array;
 import std.conv;
 
@@ -16,7 +17,7 @@ void serveMetrics(Registry registry, ushort port = 8080)
   listener.bind(new InternetAddress("0.0.0.0", port));
   listener.listen(10);
 
-  writeln("Prometheus metrics at http://localhost:", port, "/metrics");
+  // writeln("Prometheus metrics at http://localhost:", port, "/metrics");
 
   while (true) {
     auto conn = listener.accept();
