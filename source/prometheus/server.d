@@ -1,5 +1,7 @@
 module prometheus.server;
 
+import std.logger.core;
+
 import std.socket;
 import std.string;
 
@@ -17,7 +19,7 @@ void serveMetrics(Registry registry, ushort port = 8080)
   listener.bind(new InternetAddress("0.0.0.0", port));
   listener.listen(10);
 
-  // writeln("Prometheus metrics at http://localhost:", port, "/metrics");
+  infof("prometheus metrics at http://localhost:%d/metrics, registry: %s", port, registry);
 
   while (true) {
     auto conn = listener.accept();
@@ -32,6 +34,8 @@ void serveMetrics(Registry registry, ushort port = 8080)
     string request = buffer[0 .. bytesRead].idup;
 
     if (request.startsWith("GET /metrics")) {
+      // infof("got request from %s: %s", conn.remoteAddress(), request);
+      // infof("registry: %s", registry);
       string body = registry.renderAll();
       string response = "HTTP/1.1 200 OK\r\n" ~ "Content-Type: text/plain; version=0.0.4\r\n"
         ~ "Content-Length: " ~ to!string(body.length) ~ "\r\n" ~ "Connection: close\r\n\r\n" ~ body;
