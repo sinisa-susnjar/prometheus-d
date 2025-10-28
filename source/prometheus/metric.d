@@ -4,27 +4,29 @@ import std.format;
 
 /// --- Base Metric ---
 abstract class Metric {
-  string name;
-  string help;
-  string mtype;
-  string[string] labels; // static labels
+protected:
+  string _name;
+  string _help;
+  string _mtype;
+  string[string] _labels; // static labels
 
+public:
   this(string name, string help, string mtype, string[string] labels = null)
   {
-    this.name = name;
-    this.help = help;
-    this.mtype = mtype;
+    _name = name;
+    _help = help;
+    _mtype = mtype;
     if (labels !is null)
-      this.labels = labels.dup;
+      _labels = labels.dup;
   }
 
   string renderLabels()
   {
-    if (labels.length == 0)
+    if (_labels.length == 0)
       return "";
     string result = "{";
     bool first = true;
-    foreach (k, v; labels) {
+    foreach (k, v; _labels) {
       if (!first)
         result ~= ",";
       result ~= format!"%s=\"%s\""(k, v);
@@ -36,7 +38,7 @@ abstract class Metric {
 
   string renderHeader()
   {
-    return format("# HELP %s %s\n# TYPE %s %s\n", name, help, name, mtype);
+    return format("# HELP %s %s\n# TYPE %s %s\n", _name, _help, _name, _mtype);
   }
 
   abstract string render();

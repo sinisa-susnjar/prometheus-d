@@ -8,25 +8,27 @@ import prometheus.metric;
 
 /// --- Registry ---
 class Registry {
-  private Metric[] metrics;
-  private Mutex mtx;
+private:
+  Metric[] _metrics;
+  Mutex _mtx;
 
+public:
   this()
   {
-    mtx = new Mutex;
+    _mtx = new Mutex;
   }
 
   void add(Metric m)
   {
-    synchronized (mtx)
-      metrics ~= m;
+    synchronized (_mtx)
+      _metrics ~= m;
   }
 
   string renderAll()
   {
-    synchronized (mtx) {
+    synchronized (_mtx) {
       string result;
-      foreach (m; metrics)
+      foreach (m; _metrics)
         result ~= m.render() ~ "\n";
       return result;
     }

@@ -9,30 +9,32 @@ import prometheus.metric;
 
 /// --- Summary ---
 class Summary : Metric {
-  shared double sum = 0;
-  shared ulong count = 0;
-  double[] window; // simple reservoir for quantiles
-  size_t maxSamples;
-  Mutex mtx;
+private:
+  shared double _sum = 0;
+  shared ulong _count = 0;
+  double[] _window; // simple reservoir for quantiles
+  size_t _maxSamples;
+  Mutex _mtx;
 
+public:
   this(string name, string help, size_t maxSamples = 100, string[string] labels = null)
   {
     super(name, help, "summary", labels);
-    this.maxSamples = maxSamples;
-    mtx = new Mutex;
+    _maxSamples = maxSamples;
+    _mtx = new Mutex;
   }
 
   void observe(double v)
   {
-    synchronized (mtx) {
+    synchronized (_mtx) {
       // sum += v;
-      core.atomic.atomicOp!"+="(this.sum, v);
+      core.atomic.atomicOp!"+="(_sum, v);
       // count++;
-      core.atomic.atomicOp!"+="(this.count, 1);
-      if (window.length < maxSamples)
-        window ~= v;
+      core.atomic.atomicOp!"+="(_count, 1);
+      if (_window.length < _maxSamples)
+        _window ~= v;
       else {
-        window[count % maxSamples] = v; // circular overwrite
+        _window[_count % _maxSamples] = v; // circular overwrite
       }
     }
   }
@@ -41,10 +43,10 @@ class Summary : Metric {
   {
     import std.algorithm : sort;
 
-    synchronized (mtx) {
-      if (window.length == 0)
+    synchronized (_mtx) {
+      if (_window.length == 0)
         return double.nan;
-      auto sorted = window.dup;
+      auto sorted = _window.dup;
       sort(sorted);
       size_t idx = cast(size_t)(q * (cast(int) sorted.length - 1));
       return sorted[idx];
@@ -55,12 +57,12 @@ class Summary : Metric {
   {
     auto sb = appender!string;
     sb.put(renderHeader());
-    synchronized (mtx) {
+    synchronized (_mtx) {
       foreach (q; [0.5, 0.9, 0.99]) {
-        sb.put(format!"%s%s,quantile=\"%s\" %s\n"(name, renderLabels(), q, quantile(q)));
+        sb.put(format!"%s%s,quantile=\"%s\" %s\n"(_name, renderLabels(), q, quantile(q)));
       }
-      sb.put(format!"%s_sum%s %s\n"(name, renderLabels(), sum));
-      sb.put(format!"%s_count%s %s\n"(name, renderLabels(), count));
+      sb.put(format!"%s_sum%s %s\n"(_name, renderLabels(), _sum));
+      sb.put(format!"%s_count%s %s\n"(_name, renderLabels(), _count));
     }
     return sb.data;
   }
