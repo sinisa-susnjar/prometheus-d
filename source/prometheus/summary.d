@@ -54,8 +54,7 @@ class Summary : Metric {
   override string render()
   {
     auto sb = appender!string;
-    sb.put("# HELP " ~ name ~ " " ~ help ~ "\n");
-    sb.put("# TYPE " ~ name ~ " summary\n");
+    sb.put(renderHeader());
     synchronized (mtx) {
       foreach (q; [0.5, 0.9, 0.99]) {
         sb.put(format!"%s%s,quantile=\"%s\" %s\n"(name, renderLabels(), q, quantile(q)));

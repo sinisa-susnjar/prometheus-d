@@ -34,5 +34,10 @@ abstract class Metric {
     return result;
   }
 
+  string renderHeader()
+  {
+    return format("# HELP %s %s\n# TYPE %s %s\n", name, help, name, mtype);
+  }
+
   abstract string render();
 }

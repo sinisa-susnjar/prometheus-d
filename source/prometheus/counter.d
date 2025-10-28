@@ -31,7 +31,6 @@ class Counter : Metric {
 
   override string render()
   {
-    return "# HELP " ~ name ~ " " ~ help ~ "\n" ~ "# TYPE " ~ name ~ " counter\n" ~ format!"%s%s %s\n"(name,
-        renderLabels(), get());
+    return renderHeader() ~ format!"%s%s %s\n"(name, renderLabels(), get());
   }
 }

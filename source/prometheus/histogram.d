@@ -44,9 +44,7 @@ class Histogram : Metric {
   override string render()
   {
     auto sb = appender!string;
-    sb.put("# HELP " ~ name ~ " " ~ help ~ "\n");
-    sb.put("# TYPE " ~ name ~ " histogram\n");
-
+    sb.put(renderHeader());
     synchronized (mtx) {
       foreach (i, limit; buckets) {
         sb.put(format!"%s_bucket%s,le=\"%s\" %s\n"(name, renderLabels(), limit, counts[i]));
