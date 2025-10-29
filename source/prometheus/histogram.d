@@ -4,6 +4,7 @@ import core.sync.mutex;
 import core.atomic;
 import std.format;
 import std.array;
+import std.conv : to;
 
 import prometheus.metric;
 
@@ -43,18 +44,34 @@ public:
     }
   }
 
+  /// Render all metrics for this histogram
   override string render()
   {
     auto sb = appender!string;
     sb.put(renderHeader());
     synchronized (_mtx) {
+      // Regular buckets
       foreach (i, limit; _buckets) {
-        sb.put(format!"%s_bucket%s,le=\"%s\" %s\n"(_name, renderLabels(), limit, _counts[i]));
+        string[string] merged = _labels.dup;
+        merged["le"] = to!string(limit);
+        string fullLabels = renderCustomLabels(merged);
+        sb.put(format!"%s%s %s\n"(_name, fullLabels, _counts[i]));
       }
-      sb.put(format!"%s_bucket%s,le=\"+Inf\" %s\n"(_name, renderLabels(), _totalCount));
-      sb.put(format!"%s_sum%s %s\n"(_name, renderLabels(), _sum));
-      sb.put(format!"%s_count%s %s\n"(_name, renderLabels(), _totalCount));
+
+      // +Inf bucket
+      {
+        string[string] merged = _labels.dup;
+        merged["le"] = "+Inf";
+        string fullLabels = renderCustomLabels(merged);
+        sb.put(format!"%s%s %s\n"(_name, fullLabels, _totalCount));
+      }
+
+      // sum and count
+      string baseLabels = renderLabels();
+      sb.put(format!"%s_sum%s %s\n"(_name, baseLabels, _sum));
+      sb.put(format!"%s_count%s %s\n"(_name, baseLabels, _totalCount));
     }
+
     return sb.data;
   }
 }

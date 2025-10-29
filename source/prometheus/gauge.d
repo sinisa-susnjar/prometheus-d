@@ -39,6 +39,6 @@ public:
 
   override string render()
   {
-    return renderHeader() ~ format!"%s%s %s\n"(_name, renderLabels(), get());
+    return renderHeader() ~ format("%s%s %s\n", _name, renderLabels(), get());
   }
 }

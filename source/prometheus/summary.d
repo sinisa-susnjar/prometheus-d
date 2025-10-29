@@ -1,26 +1,32 @@
 module prometheus.summary;
 
 import core.sync.mutex;
+import std.algorithm;
 import core.atomic;
 import std.format;
 import std.array;
+import std.conv;
 
 import prometheus.metric;
 
 /// --- Summary ---
 class Summary : Metric {
 private:
+  struct Quantile {
+    double quantile;
+    double value;
+  }
+
+  Quantile[] _quantiles;
   shared double _sum = 0;
   shared ulong _count = 0;
-  double[] _window; // simple reservoir for quantiles
-  size_t _maxSamples;
   Mutex _mtx;
 
 public:
-  this(string name, string help, size_t maxSamples = 100, string[string] labels = null)
+  this(string name, string help, double[] quantileValues, string[string] labels = null)
   {
     super(name, help, "summary", labels);
-    _maxSamples = maxSamples;
+    _quantiles = quantileValues.map!(q => Quantile(q, 0.0)).array;
     _mtx = new Mutex;
   }
 
@@ -31,25 +37,10 @@ public:
       core.atomic.atomicOp!"+="(_sum, v);
       // count++;
       core.atomic.atomicOp!"+="(_count, 1);
-      if (_window.length < _maxSamples)
-        _window ~= v;
-      else {
-        _window[_count % _maxSamples] = v; // circular overwrite
+      // Update quantiles (simple streaming approximation)
+      foreach (ref q; _quantiles) {
+        q.value += (v - q.value) * 0.05; // smoothing factor
       }
-    }
-  }
-
-  double quantile(double q)
-  {
-    import std.algorithm : sort;
-
-    synchronized (_mtx) {
-      if (_window.length == 0)
-        return double.nan;
-      auto sorted = _window.dup;
-      sort(sorted);
-      size_t idx = cast(size_t)(q * (cast(int) sorted.length - 1));
-      return sorted[idx];
     }
   }
 
@@ -58,12 +49,20 @@ public:
     auto sb = appender!string;
     sb.put(renderHeader());
     synchronized (_mtx) {
-      foreach (q; [0.5, 0.9, 0.99]) {
-        sb.put(format!"%s%s,quantile=\"%s\" %s\n"(_name, renderLabels(), q, quantile(q)));
+      // Render quantiles
+      foreach (q; _quantiles) {
+        string[string] merged = _labels.dup;
+        merged["quantile"] = to!string(q.quantile);
+        string fullLabels = renderCustomLabels(merged);
+        sb.put(format!"%s%s %s\n"(_name, fullLabels, q.value));
       }
-      sb.put(format!"%s_sum%s %s\n"(_name, renderLabels(), _sum));
-      sb.put(format!"%s_count%s %s\n"(_name, renderLabels(), _count));
+
+      // Render sum and count
+      string baseLabels = renderLabels();
+      sb.put(format!"%s_sum%s %s\n"(_name, baseLabels, _sum));
+      sb.put(format!"%s_count%s %s\n"(_name, baseLabels, _count));
     }
+
     return sb.data;
   }
 }

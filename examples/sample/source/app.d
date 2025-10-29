@@ -21,7 +21,7 @@ void main()
   auto counter = new Counter("requests_total", "Total number of requests", ["method": "GET"]);
   auto gauge = new Gauge("cpu_usage_percent", "Simulated CPU usage");
   auto hist = new Histogram("response_time_seconds", "Response time", [0.1, 0.5, 1, 2, 5, 10]);
-  auto summary = new Summary("response_latency", "Observed latency", 100);
+  auto summary = new Summary("response_latency", "Observed latency", [0.5, 0.9, 0.99]);
   auto info = new Gauge("server_info", "Server information", [
     "account": "#123456789",
     "type": "DEMO",
@@ -38,7 +38,7 @@ void main()
   reg.add(info);
 
   // Background metric updates
-  new Thread({ serveMetrics(reg); }).start();
+  new Thread({ serveMetrics(reg, 8081); }).start();
 
   while (true) {
     counter.inc(0.1);
