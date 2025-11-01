@@ -1,6 +1,5 @@
 module prometheus.counter;
 
-import core.sync.mutex;
 import core.atomic;
 import std.format;
 
@@ -34,6 +33,8 @@ public:
 
   override string render()
   {
-    return renderHeader() ~ format("%s%s %s\n", _name, renderLabels(), get());
+    synchronized (this) {
+      return renderHeader() ~ format("%s%s %s\n", _name, renderLabels(), get());
+    }
   }
 }

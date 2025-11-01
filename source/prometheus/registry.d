@@ -1,6 +1,5 @@
 module prometheus.registry;
 
-import core.sync.mutex;
 import core.atomic;
 import std.format;
 
@@ -10,26 +9,27 @@ import prometheus.metric;
 class Registry {
 private:
   Metric[] _metrics;
-  Mutex _mtx;
 
 public:
   this()
   {
-    _mtx = new Mutex;
   }
 
   void add(Metric m)
   {
-    synchronized (_mtx)
+    synchronized (this)
       _metrics ~= m;
   }
 
   string renderAll()
   {
-    synchronized (_mtx) {
+    synchronized (this) {
       string result;
-      foreach (m; _metrics)
-        result ~= m.render() ~ "\n";
+      foreach (m; _metrics) {
+        synchronized (m) {
+          result ~= m.render() ~ "\n";
+        }
+      }
       return result;
     }
   }

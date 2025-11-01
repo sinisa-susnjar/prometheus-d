@@ -1,6 +1,5 @@
 module prometheus.histogram;
 
-import core.sync.mutex;
 import core.atomic;
 import std.format;
 import std.array;
@@ -15,7 +14,6 @@ private:
   shared double[] _counts;
   shared double _sum = 0;
   shared ulong _totalCount = 0;
-  Mutex _mtx;
 
 public:
   this(string name, string help, double[] buckets, string[string] labels = null)
@@ -24,12 +22,11 @@ public:
     _buckets = buckets.dup;
     _counts = new double[buckets.length];
     _counts[] = 0;
-    _mtx = new Mutex;
   }
 
   void observe(double v)
   {
-    synchronized (_mtx) {
+    synchronized (this) {
       foreach (i, limit; _buckets) {
         if (v <= limit) {
           // counts[i]++;
@@ -47,9 +44,9 @@ public:
   /// Render all metrics for this histogram
   override string render()
   {
-    auto sb = appender!string;
-    sb.put(renderHeader());
-    synchronized (_mtx) {
+    synchronized (this) {
+      auto sb = appender!string;
+      sb.put(renderHeader());
       // Regular buckets
       foreach (i, limit; _buckets) {
         string[string] merged = _labels.dup;
@@ -70,8 +67,7 @@ public:
       string baseLabels = renderLabels();
       sb.put(format!"%s_sum%s %s\n"(_name, baseLabels, _sum));
       sb.put(format!"%s_count%s %s\n"(_name, baseLabels, _totalCount));
+      return sb.data;
     }
-
-    return sb.data;
   }
 }

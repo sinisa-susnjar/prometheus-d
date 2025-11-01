@@ -1,6 +1,5 @@
 module prometheus.summary;
 
-import core.sync.mutex;
 import std.algorithm;
 import core.atomic;
 import std.format;
@@ -20,19 +19,17 @@ private:
   Quantile[] _quantiles;
   shared double _sum = 0;
   shared ulong _count = 0;
-  Mutex _mtx;
 
 public:
   this(string name, string help, double[] quantileValues, string[string] labels = null)
   {
     super(name, help, "summary", labels);
     _quantiles = quantileValues.map!(q => Quantile(q, 0.0)).array;
-    _mtx = new Mutex;
   }
 
   void observe(double v)
   {
-    synchronized (_mtx) {
+    synchronized (this) {
       // sum += v;
       core.atomic.atomicOp!"+="(_sum, v);
       // count++;
@@ -46,9 +43,9 @@ public:
 
   override string render()
   {
-    auto sb = appender!string;
-    sb.put(renderHeader());
-    synchronized (_mtx) {
+    synchronized (this) {
+      auto sb = appender!string;
+      sb.put(renderHeader());
       // Render quantiles
       foreach (q; _quantiles) {
         string[string] merged = _labels.dup;
@@ -61,8 +58,7 @@ public:
       string baseLabels = renderLabels();
       sb.put(format!"%s_sum%s %s\n"(_name, baseLabels, _sum));
       sb.put(format!"%s_count%s %s\n"(_name, baseLabels, _count));
+      return sb.data;
     }
-
-    return sb.data;
   }
 }

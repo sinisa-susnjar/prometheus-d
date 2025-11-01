@@ -36,7 +36,7 @@ void serveMetrics(Registry registry, ushort port = 8080)
       string request = buffer[0 .. bytesRead].idup;
 
       if (request.startsWith("GET /metrics")) {
-        // infof("got request from %s: %s", conn.remoteAddress(), request);
+        infof("got request from %s: %s", conn.remoteAddress(), request);
         // infof("registry: %s", registry);
         string body = registry.renderAll();
         string response = "HTTP/1.1 200 OK\r\n" ~ "Content-Type: text/plain; version=0.0.4\r\n"
