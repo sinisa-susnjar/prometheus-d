@@ -27,7 +27,7 @@ public:
     _quantiles = quantileValues.map!(q => Quantile(q, 0.0)).array;
   }
 
-  void observe(double v)
+  double observe(double v)
   {
     synchronized (this) {
       // sum += v;
@@ -39,6 +39,7 @@ public:
         q.value += (v - q.value) * 0.05; // smoothing factor
       }
     }
+    return v;
   }
 
   override string render()

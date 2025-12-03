@@ -11,14 +11,14 @@ import std.conv;
 import prometheus.registry;
 
 /// --- HTTP Server ---
-void serveMetrics(Registry registry, ushort port = 8080)
+void serveMetrics(Registry registry, ushort port = 8080, string host = "0.0.0.0")
 {
   auto listener = new Socket(AddressFamily.INET, SocketType.STREAM);
   listener.setOption(SocketOptionLevel.SOCKET, SocketOption.REUSEADDR, true);
-  listener.bind(new InternetAddress("0.0.0.0", port));
+  listener.bind(new InternetAddress(host, port));
   listener.listen(50);
 
-  infof("prometheus metrics at http://localhost:%d/metrics, registry: %s", port, registry);
+  infof("prometheus metrics at http://%s:%d/metrics, registry: %s", host, port, registry);
 
   while (true) {
     try {

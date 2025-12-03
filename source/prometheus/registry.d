@@ -15,10 +15,11 @@ public:
   {
   }
 
-  void add(Metric m)
+  T add(T)(T m) if (is(T : Metric))
   {
     synchronized (this)
       _metrics ~= m;
+    return m;
   }
 
   string renderAll()

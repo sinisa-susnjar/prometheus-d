@@ -24,7 +24,7 @@ public:
     _counts[] = 0;
   }
 
-  void observe(double v)
+  double observe(double v)
   {
     synchronized (this) {
       foreach (i, limit; _buckets) {
@@ -39,6 +39,7 @@ public:
       // totalCount++;
       core.atomic.atomicOp!"+="(_totalCount, 1);
     }
+    return v;
   }
 
   /// Render all metrics for this histogram
