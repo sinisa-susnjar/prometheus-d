@@ -5,17 +5,8 @@ import std.format;
 
 import prometheus.metric;
 
-/// --- Counter ---
-class Counter : Metric {
-private:
-  shared double _value = 0;
-
+private struct Value {
 public:
-  this(string name, string help, string[string] labels = null)
-  {
-    super(name, help, "counter", labels);
-  }
-
   void inc(double v = 1)
   {
     atomicOp!"+="(_value, v);
@@ -31,10 +22,59 @@ public:
     return atomicLoad(_value);
   }
 
+private:
+  shared double _value = 0;
+}
+
+/// --- Counter ---
+class Counter : Metric {
+private:
+  Value[immutable(string[string])] _values;
+
+public:
+  this(string name, string help, immutable string[string] labels = null)
+  {
+    super(name, help, "counter", labels);
+  }
+
+  ref Value opCall(immutable string[string] kv)
+  {
+    if (kv !in _values)
+      _values[kv] = Value();
+    return _values[kv];
+  }
+
+  void inc(double v = 1)
+  {
+    if (_defaultLabels !in _values)
+      _values[_defaultLabels] = Value();
+    _values[_defaultLabels].inc(v);
+  }
+
+  void set(double v)
+  {
+    if (_defaultLabels !in _values)
+      _values[_defaultLabels] = Value();
+    _values[_defaultLabels].set(v);
+  }
+
+  double get()
+  {
+    if (_defaultLabels !in _values)
+      _values[_defaultLabels] = Value();
+    return _values[_defaultLabels].get();
+  }
+
   override string render()
   {
     synchronized (this) {
-      return renderHeader() ~ format("%s%s %s\n", _name, renderLabels(), get());
+      string ret = renderHeader();
+      foreach (ref labels, ref value; _values) {
+        if (labels == _defaultLabels && _values.length > 1)
+          continue;
+        ret ~= format("%s%s %s\n", _name, renderLabels(labels), value.get());
+      }
+      return ret;
     }
   }
 }

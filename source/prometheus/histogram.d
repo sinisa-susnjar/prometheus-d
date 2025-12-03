@@ -16,7 +16,7 @@ private:
   shared ulong _totalCount = 0;
 
 public:
-  this(string name, string help, double[] buckets, string[string] labels = null)
+  this(string name, string help, double[] buckets, immutable string[string] labels = null)
   {
     super(name, help, "histogram", labels);
     _buckets = buckets.dup;
@@ -50,17 +50,17 @@ public:
       sb.put(renderHeader());
       // Regular buckets
       foreach (i, limit; _buckets) {
-        string[string] merged = _labels.dup;
-        merged["le"] = to!string(limit);
-        string fullLabels = renderCustomLabels(merged);
+        // immutable string[string] merged = _labels ~ cast(immutable)(["": ""]);
+        immutable string[string] merged = ["le": to!string(limit)];
+        string fullLabels = renderLabels(merged);
         sb.put(format!"%s%s %s\n"(_name, fullLabels, _counts[i]));
       }
 
       // +Inf bucket
       {
-        string[string] merged = _labels.dup;
-        merged["le"] = "+Inf";
-        string fullLabels = renderCustomLabels(merged);
+        // string[string] merged = _labels.dup;
+        immutable string[string] merged = ["le": "+Inf"];
+        string fullLabels = renderLabels(merged);
         sb.put(format!"%s%s %s\n"(_name, fullLabels, _totalCount));
       }
 

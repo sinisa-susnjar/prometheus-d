@@ -9,17 +9,19 @@ protected:
   string _help;
   string _mtype;
   string[string] _labels; // static labels
+  string[string] _defaultLabels = ["": ""];
 
-  string renderCustomLabels(string[string] lbls)
+  string renderLabels(string[string] labels)
   {
-    if (lbls.length == 0)
+    // don't output anything for empty or default labels
+    if (labels.length == 0 || labels == _defaultLabels)
       return "";
     string result = "{";
     bool first = true;
-    foreach (k, v; lbls) {
+    foreach (k, v; labels) {
       if (!first)
         result ~= ",";
-      result ~= format!"%s=\"%s\""(k, v);
+      result ~= format("%s=\"%s\"", k, v);
       first = false;
     }
     result ~= "}";
@@ -33,7 +35,7 @@ public:
     _help = help;
     _mtype = mtype;
     if (labels !is null)
-      _labels = labels.dup;
+      _labels = labels;
   }
 
   string renderLabels()
