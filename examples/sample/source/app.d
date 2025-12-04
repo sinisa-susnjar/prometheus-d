@@ -63,7 +63,7 @@ void main()
       counter(["client": "client#1", "symbol": "XAUUSD"]).inc(0.1);
     else
       counter(["client": "client#2", "symbol": "USDJPY"]).inc(0.2);
-    counter2.inc(1);
+    counter2(["host": hosts[cnt % hosts.length]]).inc(1);
     counter3.inc(10);
     counter4.inc(100);
     gauge(["host": hosts[cnt % hosts.length]]).set(uniform(0, 100));

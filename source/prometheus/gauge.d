@@ -2,6 +2,7 @@ module prometheus.gauge;
 
 import core.atomic;
 import std.format;
+import std.array;
 
 import prometheus.metric;
 
@@ -34,14 +35,11 @@ private:
 /// --- Gauge ---
 class Gauge : Metric {
 private:
-  shared double _value = 0;
   Value[immutable(string[string])] _values;
 
 public:
   this(string name, string help, immutable string[string] labels = null)
   {
-    if (labels)
-      _values[labels] = Value();
     super(name, help, "gauge", labels);
   }
 
@@ -56,47 +54,43 @@ public:
   {
     if (_values.length == 0)
       _values[_defaultLabels] = Value();
-    foreach (ref value; _values)
-      value.set(v);
+    _values[_defaultLabels].set(v);
   }
 
   void inc(double v = 1)
   {
     if (_values.length == 0)
       _values[_defaultLabels] = Value();
-    foreach (ref value; _values)
-      value.inc(v);
+    _values[_defaultLabels].inc(v);
   }
 
   void dec(double v = 1)
   {
     if (_values.length == 0)
       _values[_defaultLabels] = Value();
-    foreach (ref value; _values)
-      value.dec(v);
+    _values[_defaultLabels].dec(1);
   }
 
   double get()
   {
     if (_values.length == 0)
       _values[_defaultLabels] = Value();
-    double v = 0;
-    foreach (ref value; _values)
-      v = value.get();
-    return v;
+    return _values[_defaultLabels].get();
   }
 
   override string render()
   {
     synchronized (this) {
-      string ret = renderHeader();
+      auto ret = appender!string;
+      ret.put(renderHeader());
       foreach (ref labels, ref value; _values) {
+        /*
         if (labels == _defaultLabels && _values.length > 1)
           continue;
-        ret ~= format("%s%s %s\n", _name, renderLabels(labels), value.get());
+          */
+        ret.put(format("%s%s %s\n", _name, renderLabels(labels), value.get()));
       }
-      return ret;
+      return ret.data();
     }
   }
-
 }

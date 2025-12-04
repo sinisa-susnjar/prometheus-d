@@ -8,16 +8,15 @@ protected:
   string _name;
   string _help;
   string _mtype;
-  immutable string[string] _labels; // static labels
-  immutable string[string] _defaultLabels = ["": ""];
+  immutable string[string] _defaultLabels;
 
   string renderLabels(T...)(T labelsArgs)
   {
     string result = "";
     bool firstLabel = true;
-    foreach (labels; labelsArgs) {
-      // don't output anything for empty or default labels
-      if (labels.length == 0 || labels == _defaultLabels)
+    foreach (i, labels; labelsArgs) {
+      // don't output anything for empty labels or default labels only
+      if (labels.length == 0 || (i == 0 && labels == _defaultLabels)) // || labels == _defaultLabels) // if (labels.length == 0)
         continue;
       if (firstLabel)
         result ~= "{";
@@ -44,7 +43,7 @@ public:
     _help = help;
     _mtype = mtype;
     if (labels !is null)
-      _labels = labels;
+      _defaultLabels = labels;
   }
 
   string renderHeader()

@@ -2,6 +2,7 @@ module prometheus.counter;
 
 import core.atomic;
 import std.format;
+import std.array;
 
 import prometheus.metric;
 
@@ -35,8 +36,6 @@ public:
   this(string name, string help, immutable string[string] labels = null)
   {
     super(name, help, "counter", labels);
-    if (labels !is null)
-      _values[labels] = Value();
   }
 
   ref Value opCall(immutable string[string] kv)
@@ -50,38 +49,64 @@ public:
   {
     if (_values.length == 0)
       _values[_defaultLabels] = Value();
-    foreach (ref value; _values)
-      value.inc(v);
+    _values[_defaultLabels].inc(v);
   }
 
   void set(double v)
   {
     if (_values.length == 0)
       _values[_defaultLabels] = Value();
-    foreach (ref value; _values)
-      value.set(v);
+    _values[_defaultLabels].set(v);
   }
 
   double get()
   {
     if (_values.length == 0)
       _values[_defaultLabels] = Value();
-    double v = 0;
-    foreach (ref value; _values)
-      v = value.get();
-    return v;
+    return _values[_defaultLabels].get();
   }
 
   override string render()
   {
     synchronized (this) {
-      string ret = renderHeader();
-      foreach (ref labels, ref value; _values) {
-        if (labels == _defaultLabels && _values.length > 1)
-          continue;
-        ret ~= format("%s%s %s\n", _name, renderLabels(labels), value.get());
-      }
-      return ret;
+      auto ret = appender!string;
+      ret.put(renderHeader());
+      foreach (ref labels, ref value; _values)
+        ret.put(format("%s%s %s\n", _name, renderLabels(labels, _defaultLabels), value.get()));
+      return ret.data();
     }
   }
+}
+
+// test combinations of no labels, default labels, opCall labels
+unittest {
+  // no labels
+  auto c1 = new Counter("name1", "desc1");
+  c1.inc(1);
+  auto expect = "# HELP name1 desc1\n# TYPE name1 counter\nname1 1\n";
+  assert(c1.render() == expect, format("\ngot:\n%s\nexpected:\n%s", c1.render(), expect));
+
+  // default labels
+  auto c2 = new Counter("name2", "desc2", ["key": "value"]);
+  c2.inc(2);
+  expect = "# HELP name2 desc2\n# TYPE name2 counter\nname2{key=\"value\"} 2\n";
+  assert(c2.render() == expect, format("\ngot:\n%s\nexpected:\n%s", c2.render(), expect));
+
+  // opCall labels
+  auto c3 = new Counter("name3", "desc3");
+  c3(["op": "inc"]).inc(3);
+  expect = "# HELP name3 desc3\n# TYPE name3 counter\nname3{op=\"inc\"} 3\n";
+  assert(c3.render() == expect, format("\ngot:\n%s\nexpected:\n%s", c3.render(), expect));
+
+  // default + opCall labels
+  auto c4 = new Counter("name4", "desc4", ["key": "value"]);
+  c4(["op1": "inc1"]).inc(4.1);
+  expect = "# HELP name4 desc4\n# TYPE name4 counter\nname4{op1=\"inc1\",key=\"value\"} 4.1\n";
+  assert(c4.render() == expect, format("\ngot:\n%s\nexpected:\n%s", c4.render(), expect));
+
+  // same counter with different opCall labels
+  c4(["op2": "inc2"]).inc(4.2);
+  expect = "# HELP name4 desc4\n# TYPE name4 counter\nname4{op2=\"inc2\",key=\"value\"} 4.2\n"
+    ~ "name4{op1=\"inc1\",key=\"value\"} 4.1\n";
+  assert(c4.render() == expect, format("\ngot:\n%s\nexpected:\n%s", c4.render(), expect));
 }
