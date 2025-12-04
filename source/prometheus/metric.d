@@ -51,5 +51,10 @@ public:
     return format("# HELP %s %s\n# TYPE %s %s\n", _name, _help, _name, _mtype);
   }
 
+  string name() const
+  {
+    return _name;
+  }
+
   abstract string render();
 }

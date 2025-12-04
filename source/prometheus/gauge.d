@@ -68,7 +68,7 @@ public:
   {
     if (_values.length == 0)
       _values[_defaultLabels] = Value();
-    _values[_defaultLabels].dec(1);
+    _values[_defaultLabels].dec(v);
   }
 
   double get()
@@ -83,13 +83,8 @@ public:
     synchronized (this) {
       auto ret = appender!string;
       ret.put(renderHeader());
-      foreach (ref labels, ref value; _values) {
-        /*
-        if (labels == _defaultLabels && _values.length > 1)
-          continue;
-          */
+      foreach (ref labels, ref value; _values)
         ret.put(format("%s%s %s\n", _name, renderLabels(labels), value.get()));
-      }
       return ret.data();
     }
   }
