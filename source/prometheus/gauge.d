@@ -35,17 +35,17 @@ private:
 class Gauge : Metric {
 private:
   shared double _value = 0;
-  Value[string[string]] _values;
+  Value[immutable(string[string])] _values;
 
 public:
-  this(string name, string help, string[string] labels = null)
+  this(string name, string help, immutable string[string] labels = null)
   {
     if (labels)
       _values[labels] = Value();
     super(name, help, "gauge", labels);
   }
 
-  ref Value opCall(string[string] kv)
+  ref Value opCall(immutable string[string] kv)
   {
     if (kv !in _values)
       _values[kv] = Value();

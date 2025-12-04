@@ -17,10 +17,6 @@ void main()
 {
   auto reg = new Registry();
 
-  string[string] map;
-  map["symbol"] = "XAUUSD";
-  map["symbol"] = "EURUSD";
-
   // Create some counters
   auto counter = reg.add(new Counter("requests_total", "Total number of requests"));
   auto counter2 = reg.add(new Counter("requests_total2", "Total number of requests", [
@@ -74,7 +70,8 @@ void main()
     gauge2.set(uniform(100, 1000));
     gauge3.set(uniform(1000, 10_000));
     gauge4.set(uniform(10_000, 100_000));
-    summary(["host": hosts[cnt % hosts.length]]).observe(hist.observe(uniform(0.01, 10.0)));
+    auto v = hist(["host": hosts[cnt % hosts.length]]).observe(uniform(0.01, 10.0));
+    summary(["host": hosts[cnt % hosts.length]]).observe(v);
     Thread.sleep(50.msecs);
   }
 }
