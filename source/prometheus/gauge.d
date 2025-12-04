@@ -54,30 +54,36 @@ public:
 
   void set(double v)
   {
-    if (_defaultLabels !in _values)
+    if (_values.length == 0)
       _values[_defaultLabels] = Value();
-    _values[_defaultLabels].set(v);
+    foreach (ref value; _values)
+      value.set(v);
   }
 
   void inc(double v = 1)
   {
-    if (_defaultLabels !in _values)
+    if (_values.length == 0)
       _values[_defaultLabels] = Value();
-    _values[_defaultLabels].inc(v);
+    foreach (ref value; _values)
+      value.inc(v);
   }
 
   void dec(double v = 1)
   {
-    if (_defaultLabels !in _values)
+    if (_values.length == 0)
       _values[_defaultLabels] = Value();
-    _values[_defaultLabels].dec(v);
+    foreach (ref value; _values)
+      value.dec(v);
   }
 
   double get()
   {
-    if (_defaultLabels !in _values)
+    if (_values.length == 0)
       _values[_defaultLabels] = Value();
-    return _values[_defaultLabels].get();
+    double v = 0;
+    foreach (ref value; _values)
+      v = value.get();
+    return v;
   }
 
   override string render()

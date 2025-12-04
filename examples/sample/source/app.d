@@ -23,10 +23,10 @@ void main()
     "method": "GET"
   ]));
   auto counter3 = reg.add(new Counter("requests_total3", "Total number of requests", [
-    "method": "GET"
+    "method": "POST"
   ]));
   auto counter4 = reg.add(new Counter("requests_total4", "Total number of requests", [
-    "method": "GET"
+    "method": "DELETE"
   ]));
 
   // Create some gauges

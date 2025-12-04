@@ -35,6 +35,8 @@ public:
   this(string name, string help, immutable string[string] labels = null)
   {
     super(name, help, "counter", labels);
+    if (labels !is null)
+      _values[labels] = Value();
   }
 
   ref Value opCall(immutable string[string] kv)
@@ -46,23 +48,28 @@ public:
 
   void inc(double v = 1)
   {
-    if (_defaultLabels !in _values)
+    if (_values.length == 0)
       _values[_defaultLabels] = Value();
-    _values[_defaultLabels].inc(v);
+    foreach (ref value; _values)
+      value.inc(v);
   }
 
   void set(double v)
   {
-    if (_defaultLabels !in _values)
+    if (_values.length == 0)
       _values[_defaultLabels] = Value();
-    _values[_defaultLabels].set(v);
+    foreach (ref value; _values)
+      value.set(v);
   }
 
   double get()
   {
-    if (_defaultLabels !in _values)
+    if (_values.length == 0)
       _values[_defaultLabels] = Value();
-    return _values[_defaultLabels].get();
+    double v = 0;
+    foreach (ref value; _values)
+      v = value.get();
+    return v;
   }
 
   override string render()
