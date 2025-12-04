@@ -36,12 +36,12 @@ void serveMetrics(Registry registry, ushort port = 8080, string host = "0.0.0.0"
       string request = buffer[0 .. bytesRead].idup;
 
       if (request.startsWith("GET /metrics")) {
-        infof("got request from %s: %s", conn.remoteAddress(), request);
+        tracef("got request from %s: %s", conn.remoteAddress(), request);
         // infof("registry: %s", registry);
         string body = registry.renderAll();
         string response = "HTTP/1.1 200 OK\r\n" ~ "Content-Type: text/plain; version=0.0.4\r\n"
           ~ "Content-Length: " ~ to!string(body.length) ~ "\r\n" ~ "Connection: close\r\n\r\n" ~ body;
-        infof("response: %s", response);
+        tracef("response: %s", response);
         auto ret = conn.send(response);
         if (ret == Socket.ERROR || ret <= 0) {
           errorf("send response failed %s: %s", conn.remoteAddress(), response);
