@@ -5,11 +5,13 @@ import std.format;
 
 import prometheus.metric;
 import prometheus.counter;
+import prometheus.gauge;
 
 /// --- Registry ---
 class Registry {
 private:
   Counter[string] _counters;
+  Gauge[string] _gauges;
   Metric[] _metrics;
 
 public:
@@ -24,13 +26,23 @@ public:
     return null;
   }
 
+  Gauge gauge(string name)
+  {
+    if (name in _gauges)
+      return _gauges[name];
+    return null;
+  }
+
   T add(T)(T m) if (is(T : Metric))
   {
     synchronized (this) {
       _metrics ~= m;
+      // TODO: check if a metric with the same name already exists and do something smart
       static if (is(T : Counter)) {
-        // TODO: check if a counter with the same name already exists and do something smart
         _counters[m.name()] = m;
+      }
+      static if (is(T : Gauge)) {
+        _gauges[m.name()] = m;
       }
     }
     return m;
