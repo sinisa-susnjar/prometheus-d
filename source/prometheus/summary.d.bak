@@ -1,0 +1,69 @@
+module prometheus.summary;
+
+import core.sync.mutex;
+import core.atomic;
+import std.format;
+import std.array;
+
+import prometheus.metric;
+
+/// --- Summary ---
+class Summary : Metric {
+private:
+  shared double _sum = 0;
+  shared ulong _count = 0;
+  double[] _window; // simple reservoir for quantiles
+  size_t _maxSamples;
+  Mutex _mtx;
+
+public:
+  this(string name, string help, size_t maxSamples = 100, string[string] labels = null)
+  {
+    super(name, help, "summary", labels);
+    _maxSamples = maxSamples;
+    _mtx = new Mutex;
+  }
+
+  void observe(double v)
+  {
+    synchronized (_mtx) {
+      // sum += v;
+      core.atomic.atomicOp!"+="(_sum, v);
+      // count++;
+      core.atomic.atomicOp!"+="(_count, 1);
+      if (_window.length < _maxSamples)
+        _window ~= v;
+      else {
+        _window[_count % _maxSamples] = v; // circular overwrite
+      }
+    }
+  }
+
+  double quantile(double q)
+  {
+    import std.algorithm : sort;
+
+    synchronized (_mtx) {
+      if (_window.length == 0)
+        return double.nan;
+      auto sorted = _window.dup;
+      sort(sorted);
+      size_t idx = cast(size_t)(q * (cast(int) sorted.length - 1));
+      return sorted[idx];
+    }
+  }
+
+  override string render()
+  {
+    auto sb = appender!string;
+    sb.put(renderHeader());
+    synchronized (_mtx) {
+      foreach (q; [0.5, 0.9, 0.99]) {
+        sb.put(format("%s%s,quantile=\"%s\" %s\n", _name, renderLabels(), q, quantile(q)));
+      }
+      sb.put(format("%s_sum%s %s\n", _name, renderLabels(), _sum));
+      sb.put(format("%s_count%s %s\n", _name, renderLabels(), _count));
+    }
+    return sb.data;
+  }
+}

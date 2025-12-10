@@ -20,7 +20,7 @@ public:
     _quantiles = quantileValues.map!(q => Quantile(q, 0.0)).array;
   }
 
-  double observe(double v)
+  double observe(double v) @nogc nothrow
   {
     // sum += v;
     core.atomic.atomicOp!"+="(_sum, v);
@@ -33,17 +33,17 @@ public:
     return v;
   }
 
-  ref const(Quantile[]) quantiles() const
+  ref const(Quantile[]) quantiles() const @nogc nothrow
   {
     return _quantiles;
   }
 
-  double sum() const
+  double sum() const @nogc nothrow
   {
     return _sum;
   }
 
-  double count() const
+  double count() const @nogc nothrow
   {
     return _count;
   }
@@ -61,7 +61,7 @@ private:
   double[] _quantiles;
 
 public:
-  this(string name, string help, double[] quantileValues, immutable string[string] labels = null)
+  this(string name, string help, double[] quantileValues, immutable string[string] labels = null) @nogc nothrow
   {
     super(name, help, "summary", labels);
     _quantiles = quantileValues;

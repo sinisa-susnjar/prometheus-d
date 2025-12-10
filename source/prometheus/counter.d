@@ -8,17 +8,17 @@ import prometheus.metric;
 
 private struct Value {
 public:
-  void inc(double v = 1)
+  void inc(double v = 1) @nogc nothrow
   {
     atomicOp!"+="(_value, v);
   }
 
-  void set(double v)
+  void set(double v) @nogc nothrow
   {
     atomicStore(_value, v);
   }
 
-  double get()
+  double get() @nogc nothrow
   {
     return atomicLoad(_value);
   }
@@ -33,7 +33,7 @@ private:
   Value[immutable(string[string])] _values;
 
 public:
-  this(string name, string help, immutable string[string] labels = null)
+  this(string name, string help, immutable string[string] labels = null) @nogc nothrow
   {
     super(name, help, "counter", labels);
   }

@@ -19,14 +19,14 @@ public:
   {
   }
 
-  Counter counter(string name)
+  Counter counter(string name) @nogc nothrow
   {
     if (name in _counters)
       return _counters[name];
     return null;
   }
 
-  Gauge gauge(string name)
+  Gauge gauge(string name) @nogc nothrow
   {
     if (name in _gauges)
       return _gauges[name];

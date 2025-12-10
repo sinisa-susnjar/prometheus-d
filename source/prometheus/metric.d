@@ -37,7 +37,7 @@ protected:
   }
 
 public:
-  this(string name, string help, string mtype, immutable string[string] labels = null)
+  this(string name, string help, string mtype, immutable string[string] labels = null) @nogc nothrow
   {
     _name = name;
     _help = help;
@@ -51,7 +51,7 @@ public:
     return format("# HELP %s %s\n# TYPE %s %s\n", _name, _help, _name, _mtype);
   }
 
-  string name() const
+  string name() const @nogc nothrow
   {
     return _name;
   }

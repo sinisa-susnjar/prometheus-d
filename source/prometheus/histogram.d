@@ -16,7 +16,7 @@ public:
     _counts[] = 0;
   }
 
-  double observe(double v)
+  double observe(double v) @nogc nothrow
   {
     foreach (i, limit; _buckets) {
       if (v <= limit) {
@@ -32,22 +32,22 @@ public:
     return v;
   }
 
-  shared(const(double[])) counts() const
+  shared(const(double[])) counts() const @nogc nothrow
   {
     return _counts;
   }
 
-  shared(const(double)) sum() const
+  shared(const(double)) sum() const @nogc nothrow
   {
     return _sum;
   }
 
-  shared(const(ulong)) totalCount() const
+  shared(const(ulong)) totalCount() const @nogc nothrow
   {
     return _totalCount;
   }
 
-  const(double[]) buckets() const
+  const(double[]) buckets() const @nogc nothrow
   {
     return _buckets;
   }
