@@ -40,30 +40,38 @@ public:
 
   ref Value opCall(immutable string[string] kv)
   {
-    if (kv !in _values)
-      _values[kv] = Value();
-    return _values[kv];
+    synchronized (this) {
+      if (kv !in _values)
+        _values[kv] = Value();
+      return _values[kv];
+    }
   }
 
   void inc(double v = 1)
   {
-    if (_values.length == 0)
-      _values[_defaultLabels] = Value();
-    _values[_defaultLabels].inc(v);
+    synchronized (this) {
+      if (_values.length == 0)
+        _values[_defaultLabels] = Value();
+      _values[_defaultLabels].inc(v);
+    }
   }
 
   void set(double v)
   {
-    if (_values.length == 0)
-      _values[_defaultLabels] = Value();
-    _values[_defaultLabels].set(v);
+    synchronized (this) {
+      if (_values.length == 0)
+        _values[_defaultLabels] = Value();
+      _values[_defaultLabels].set(v);
+    }
   }
 
   double get()
   {
-    if (_values.length == 0)
-      _values[_defaultLabels] = Value();
-    return _values[_defaultLabels].get();
+    synchronized (this) {
+      if (_values.length == 0)
+        _values[_defaultLabels] = Value();
+      return _values[_defaultLabels].get();
+    }
   }
 
   override string render()
@@ -109,4 +117,24 @@ unittest {
   expect = "# HELP name4 desc4\n# TYPE name4 counter\nname4{op2=\"inc2\",key=\"value\"} 4.2\n"
     ~ "name4{op1=\"inc1\",key=\"value\"} 4.1\n";
   assert(c4.render() == expect, format("\ngot:\n%s\nexpected:\n%s", c4.render(), expect));
+
+  // set and get
+  auto c5 = new Counter("name5", "desc5");
+  c5.set(100);
+  assert(c5.get() == 100, format("expected 100, got %s", c5.get()));
+
+  // set on opCall-labeled counter
+  c5(["host": "a"]).set(200);
+  assert(c5(["host": "a"]).get() == 200, format("expected 200, got %s", c5(["host": "a"]).get()));
+
+  // set + get with default labels
+  auto c6 = new Counter("name6", "desc6", ["env": "test"]);
+  c6.set(42);
+  assert(c6.get() == 42, format("expected 42, got %s", c6.get()));
+  expect = "# HELP name6 desc6\n# TYPE name6 counter\nname6{env=\"test\"} 42\n";
+  assert(c6.render() == expect, format("\ngot:\n%s\nexpected:\n%s", c6.render(), expect));
+
+  // get on a brand-new counter (triggers lazy-init in get())
+  auto c7 = new Counter("name7", "desc7");
+  assert(c7.get() == 0, format("expected 0, got %s", c7.get()));
 }

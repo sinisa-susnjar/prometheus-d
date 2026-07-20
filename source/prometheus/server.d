@@ -22,8 +22,8 @@ void serveMetrics(Registry registry, ushort port = 8080, string host = "0.0.0.0"
 
   infof("prometheus metrics at http://%s:%d/metrics, registry: %s", host, port, registry);
 
-  auto gcFreeSize = registry.add(new Gauge("gc_free_size", "Free bytes on the GC heap"));
-  auto gcUsedSize = registry.add(new Gauge("gc_used_size", "Used bytes on the GC heap"));
+  auto gcFreeSize = registry.add(new Gauge("gc_free_size_bytes", "Free bytes on the GC heap"));
+  auto gcUsedSize = registry.add(new Gauge("gc_used_size_bytes", "Used bytes on the GC heap"));
   auto gcMaxCollectionTime = registry.add(new Gauge("gc_max_collection_time",
       "Largest time spent during GC cycle in µs"));
   auto gcMaxPauseTime = registry.add(new Gauge("gc_max_pause_time", "Largest time paused during GC cycle in us"));
@@ -46,7 +46,9 @@ void serveMetrics(Registry registry, ushort port = 8080, string host = "0.0.0.0"
 
       string request = buffer[0 .. bytesRead].idup;
 
-      if (request.startsWith("GET /metrics")) {
+      // Exact match for /metrics
+      if (request.startsWith("GET /metrics ") || request.startsWith("GET /metrics\r\n")
+        || request == "GET /metrics") {
 
         auto stats = GC.stats();
         auto prof = GC.profileStats();
@@ -68,6 +70,11 @@ void serveMetrics(Registry registry, ushort port = 8080, string host = "0.0.0.0"
         if (ret == Socket.ERROR || ret <= 0) {
           errorf("send response failed %s: %s", conn.remoteAddress(), response);
         }
+      } else if (request.startsWith("GET / ") || request.startsWith("GET /\r\n") || request == "GET /") {
+        string body = "prometheus-d metrics server\n";
+        string response = "HTTP/1.1 200 OK\r\n" ~ "Content-Type: text/plain\r\n"
+          ~ "Content-Length: " ~ to!string(body.length) ~ "\r\n" ~ "Connection: close\r\n\r\n" ~ body;
+        conn.send(response);
       } else {
         errorf("unknown request from %s: %s", conn.remoteAddress(), request);
         conn.send("HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n");
@@ -75,5 +82,62 @@ void serveMetrics(Registry registry, ushort port = 8080, string host = "0.0.0.0"
     } catch (Exception ex) {
       errorf("caught exception: %s", ex);
     }
+  }
+}
+
+// test HTTP server: /metrics, /, and 404
+unittest {
+  import std.string : indexOf;
+  import core.thread : Thread, msecs;
+  import prometheus.counter;
+
+  // Use a high random-ish port to avoid conflicts
+  ushort port = 18901;
+
+  auto reg = new Registry();
+  auto c = reg.add(new Counter("test_requests", "Test counter"));
+  c.inc(42);
+
+  // Spawn the server in a background thread
+  auto serverThread = new Thread(() {
+    serveMetrics(reg, port, "127.0.0.1");
+  });
+  serverThread.isDaemon(true);
+  serverThread.start();
+
+  // Give it time to bind
+  Thread.sleep(200.msecs);
+
+  auto sendRequest = (string req) {
+    auto sock = new Socket(AddressFamily.INET, SocketType.STREAM);
+    scope (exit) sock.close();
+    sock.connect(new InternetAddress("127.0.0.1", port));
+    sock.send(req);
+    char[8192] buf;
+    auto n = sock.receive(buf[]);
+    if (n <= 0 || n == Socket.ERROR)
+      return "";
+    return buf[0 .. n].idup;
+  };
+
+  // --- test GET /metrics ---
+  {
+    auto resp = sendRequest("GET /metrics HTTP/1.0\r\n\r\n");
+    assert(resp.indexOf("HTTP/1.1 200 OK") >= 0, "should get 200 for /metrics, got: " ~ resp);
+    assert(resp.indexOf("Content-Type: text/plain") >= 0, "should have text/plain content type");
+    assert(resp.indexOf("test_requests") > 0, "should contain counter name in body");
+  }
+
+  // --- test GET / ---
+  {
+    auto resp = sendRequest("GET / HTTP/1.0\r\n\r\n");
+    assert(resp.indexOf("HTTP/1.1 200 OK") >= 0, "should get 200 for /, got: " ~ resp);
+    assert(resp.indexOf("prometheus-d metrics server") > 0, "should have server info in body");
+  }
+
+  // --- test unknown request (404) ---
+  {
+    auto resp = sendRequest("POST /foo HTTP/1.0\r\n\r\n");
+    assert(resp.indexOf("HTTP/1.1 404 Not Found") >= 0, "should get 404 for unknown path, got: " ~ resp);
   }
 }

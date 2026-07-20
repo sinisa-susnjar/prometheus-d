@@ -56,5 +56,10 @@ public:
     return _name;
   }
 
+  string mtype() const @nogc nothrow
+  {
+    return _mtype;
+  }
+
   abstract string render();
 }

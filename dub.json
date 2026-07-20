@@ -2,7 +2,7 @@
   "authors": [
     "Sinisa Susnjar"
   ],
-  "copyright": "Copyright © 2025, Sinisa Susnjar",
+  "copyright": "Copyright © 2026, Sinisa Susnjar",
   "description": "Prometheus collector and metrics in D without any external dependencies.",
   "license": "MIT",
   "name": "prometheus-d",
