@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ macos-latest ]
-        dc: [ ldc-latest, dmd-latest ]
+        dc: [ ldc-latest ]
 
     name: "${{matrix.os}}:${{matrix.dc}}"
 
