@@ -1,0 +1,34 @@
+name: ubuntu
+
+on:
+  push:
+    branches:
+    - main
+
+jobs:
+  build:
+    runs-on: ${{matrix.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest ]
+        dc: [ ldc-latest, dmd-latest ]
+
+    name: "${{matrix.os}}:${{matrix.dc}}"
+
+    steps:
+    - uses: actions/checkout@v4.1.2
+    - uses: dlang-community/setup-dlang@v1.4.0
+
+    - name: 'Build & Test'
+      env:
+        SLACK_TOKEN: ${{ secrets.SLACK_TOKEN }}
+      run: |
+        # Build the project, without unittests
+        dub build -b release --compiler=$DC
+        # Build and run tests
+        dub test -b unittest-cov --compiler=$DC
+        # Upload code coverage
+        curl -Os https://uploader.codecov.io/latest/linux/codecov
+        chmod +x codecov
+        ./codecov
