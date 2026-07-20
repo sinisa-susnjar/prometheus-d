@@ -18,8 +18,8 @@ jobs:
     name: "${{matrix.os}}:${{matrix.dc}}"
 
     steps:
-    - uses: actions/checkout@v4.1.2
-    - uses: dlang-community/setup-dlang@v1.4.0
+    - uses: actions/checkout@v7.0.1
+    - uses: dlang-community/setup-dlang@v2
 
     - name: 'Build & Test'
       env:
