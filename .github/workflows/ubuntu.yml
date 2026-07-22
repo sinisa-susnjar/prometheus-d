@@ -31,27 +31,14 @@ jobs:
         dub build -b release --compiler=$DC
         # Build and run tests
         dub test -b unittest-cov --compiler=$DC
-        # coverage for auto-generated test-runner seems to upset codecov
-        # find . -name "*.lst"
-        # find . -name "*.d"
-        # head -n 40 *.lst
-        find . -name "*dub_test_root.lst" -delete
-        rm -f -- *dub_test_root.lst
-        # rm -f source-prometheus-package.lst
-        # mv source-prometheus-counter.lst source/prometheus/counter.lst
-        # mv source-prometheus-gauge.lst source/prometheus/gauge.lst
-        # mv source-prometheus-histogram.lst source/prometheus/histogram.lst
-        # mv source-prometheus-metric.lst source/prometheus/metric.lst
-        # mv source-prometheus-package.lst source/prometheus/package.lst
-        # mv source-prometheus-registry.lst source/prometheus/registry.lst
-        # mv source-prometheus-server.lst source/prometheus/server.lst
-        # mv source-prometheus-summary.lst source/prometheus/summary.lst
-        # rm -f *.lst
 
     - name: 'Upload coverage reports to Codecov'
       if: matrix.dc == 'ldc-latest'
-      # Upload code coverage
-      uses: codecov/codecov-action@v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        # verbose: true
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      run: |
+        # Upload code coverage
+        curl -Os https://uploader.codecov.io/latest/linux/codecov
+        chmod +x codecov
+        ./codecov
+
