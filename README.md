@@ -174,4 +174,5 @@ request_latency_seconds_count 7
 
 ## History
 
+- **v0.0.2** — Added @safe, dip1000, faster formatting using appender!string
 - **v0.0.1** — First release. Counter, Gauge, Histogram, Summary. Labels. HTTP server. GC stats.
