@@ -29,7 +29,7 @@ protected:
       foreach (k, v; labels) {
         if (!first)
           result ~= ",";
-        result ~= format("%s=\"%s\"", k, v);
+        result ~= format!"%s=\"%s\""(k, v);
         first = false;
       }
     }
@@ -50,7 +50,7 @@ public:
 
   string renderHeader()
   {
-    return format("# HELP %s %s\n# TYPE %s %s\n", _name, _help, _name, _mtype);
+    return format!"# HELP %s %s\n# TYPE %s %s\n"(_name, _help, _name, _mtype);
   }
 
   string name() const @nogc nothrow

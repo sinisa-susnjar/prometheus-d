@@ -82,7 +82,7 @@ public:
       auto ret = appender!string;
       ret.put(renderHeader());
       foreach (ref labels, ref value; _values)
-        ret.put(format("%s%s %s\n", _name, renderLabels(labels, _defaultLabels), value.get()));
+        ret.put(format!"%s%s %s\n"(_name, renderLabels(labels, _defaultLabels), value.get()));
       return ret.data();
     }
   }

@@ -52,9 +52,10 @@ void serveMetrics(Registry registry, ushort port = 8080, string host = "0.0.0.0"
 
       string request = buffer[0 .. bytesRead].idup;
 
+      enum REQUEST = "GET /metrics";
+
       // Exact match for /metrics
-      if (request.startsWith("GET /metrics ") || request.startsWith("GET /metrics\r\n")
-        || request == "GET /metrics") {
+      if (request.startsWith(REQUEST ~ " ") || request.startsWith(REQUEST ~ "\r\n") || request == REQUEST) {
 
         auto stats = GC.stats();
         auto prof = GC.profileStats();
@@ -67,20 +68,26 @@ void serveMetrics(Registry registry, ushort port = 8080, string host = "0.0.0.0"
         gcTotalPauseTime.set(prof.totalPauseTime.total!"usecs");
 
         // tracef("got request from %s: %s", conn.remoteAddress(), request);
-        // infof("registry: %s", registry);
+
         string body = registry.renderAll();
-        string response = "HTTP/1.1 200 OK\r\n" ~ "Content-Type: text/plain; version=0.0.4\r\n"
-          ~ "Content-Length: " ~ to!string(body.length) ~ "\r\n" ~ "Connection: close\r\n\r\n" ~ body;
-        // tracef("response: %s", response);
-        auto ret = conn.send(response);
+        auto resp = appender!string;
+        resp.put("HTTP/1.1 200 OK\r\nContent-Type: text/plain; version=0.0.4\r\nContent-Length: ");
+        resp.put(to!string(body.length));
+        resp.put("\r\nConnection: close\r\n\r\n");
+        resp.put(body);
+        // tracef("response: %s", resp.data());
+        auto ret = conn.send(resp.data());
         if (ret == Socket.ERROR || ret <= 0) {
-          errorf("send response failed %s: %s", conn.remoteAddress(), response);
+          errorf("send response failed %s: %s", conn.remoteAddress(), resp.data());
         }
       } else if (request.startsWith("GET / ") || request.startsWith("GET /\r\n") || request == "GET /") {
-        string body = "prometheus-d metrics server\n";
-        string response = "HTTP/1.1 200 OK\r\n" ~ "Content-Type: text/plain\r\n"
-          ~ "Content-Length: " ~ to!string(body.length) ~ "\r\n" ~ "Connection: close\r\n\r\n" ~ body;
-        conn.send(response);
+        enum BODY = "prometheus-d metrics server\n";
+        auto resp = appender!string;
+        resp.put("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ");
+        resp.put(to!string(BODY.length));
+        resp.put("\r\nConnection: close\r\n\r\n");
+        resp.put(BODY);
+        conn.send(resp.data());
       } else {
         errorf("unknown request from %s: %s", conn.remoteAddress(), request);
         conn.send("HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n");
