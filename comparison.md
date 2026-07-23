@@ -45,7 +45,7 @@ Comparison of three D-language Prometheus metrics implementations to assess rela
 | Registry mutations | `synchronized(this)` | `synchronized(this)` on register/unregister | `synchronized(this)` on register/unregister |
 | Registry reads (metrics property) | `synchronized(this)` on renderAll | ❌ not synchronized | ❌ not synchronized |
 | Global registry init | N/A (no global) | `initOnce` (correct) | `initOnce` (correct) |
-| `@safe` attribute | ❌ not used | ✅ module-level | ✅ module-level |
+| `@safe` attribute | ✅ module-level | ✅ module-level | ✅ module-level |
 
 **Winner:** This repo. The andrewbenton/burner libraries have no concurrency protection at the metric level — `observe()` and `collect()` on the same Counter/Gauge/Histogram from multiple threads is a data race. This repo uses a two-tier model: lock-free atomics on the hot path, monitor locks on container operations.
 
@@ -109,6 +109,6 @@ Comparison of three D-language Prometheus metrics implementations to assess rela
 ## Verification
 
 This comparison was produced by reading all source files from:
-- `sinisa-susnjar-prometheus-d/source/prometheus/*.d` (this repo) [commit a391735]
-- `andrewbrenton-prometheus-d/source/prometheus/*.d` [commit a134625]
-- `burner-prometheus-d/source/prometheus/*.d` [commit 383f8e7]
+- `sinisa-susnjar/prometheus-d/source/prometheus/*.d` (this repo) [commit a391735]
+- `andrewbrenton/prometheus-d/source/prometheus/*.d` [commit a134625]
+- `burner/prometheus-d/source/prometheus/*.d` [commit 383f8e7]
