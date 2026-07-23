@@ -9,17 +9,24 @@
   "configurations": [
     {
       "name": "lib",
-      "targetType": "staticLibrary"
+      "targetType": "staticLibrary",
+      "dflags": [
+        "-preview=dip1000"
+      ]
     },
     {
       "name": "shared",
-      "targetType": "dynamicLibrary"
+      "targetType": "dynamicLibrary",
+      "dflags": [
+        "-preview=dip1000"
+      ]
     },
     {
       "name": "asan",
       "targetType": "staticLibrary",
       "dflags": [
-        "-fsanitize=address"
+        "-fsanitize=address",
+        "-preview=dip1000"
       ]
     }
   ]
