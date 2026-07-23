@@ -9,6 +9,8 @@ import std.math;
 
 import prometheus.metric;
 
+@safe:
+
 private struct Quantile {
   double quantile;
   double value;
@@ -58,7 +60,7 @@ public:
     return v;
   }
 
-  ref const(Quantile[]) quantiles() const
+  const(Quantile[]) quantiles() const
   {
     return _quantiles;
   }
@@ -123,9 +125,9 @@ public:
           continue;
 
         // Render quantiles
-        foreach (q; value.quantiles()) {
-          string fullLabels = renderLabels(labels, _defaultLabels,
-            cast(immutable)["quantile": to!string(q.quantile)]);
+        foreach (immutable q; value.quantiles()) {
+          immutable quantile = ["quantile": to!string(q.quantile)];
+          string fullLabels = renderLabels(labels, _defaultLabels, quantile);
           sb.put(format!"%s%s %s\n"(_name, fullLabels, q.value));
         }
 

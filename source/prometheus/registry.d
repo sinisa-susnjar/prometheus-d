@@ -8,6 +8,8 @@ import prometheus.metric;
 import prometheus.counter;
 import prometheus.gauge;
 
+@safe:
+
 /// --- Registry ---
 class Registry {
 private:
@@ -43,9 +45,7 @@ public:
     synchronized (this) {
       // Check for duplicate metric names
       if (m.name() in _metricsByName) {
-        auto existing = _metricsByName[m.name()];
-        warningf("registry: metric with name '%s' already registered, skipping duplicate",
-          m.name());
+        warningf("registry: metric with name '%s' already registered, skipping duplicate", m.name());
         return m;
       }
       _metricsByName[m.name()] = m;

@@ -13,23 +13,29 @@ import prometheus.registry;
 import prometheus.gauge;
 
 /// --- HTTP Server ---
-void serveMetrics(Registry registry, ushort port = 8080, string host = "0.0.0.0")
+void serveMetrics(Registry registry, ushort port = 8080, string host = "0.0.0.0") @safe
 {
   auto listener = new Socket(AddressFamily.INET, SocketType.STREAM);
   listener.setOption(SocketOptionLevel.SOCKET, SocketOption.REUSEADDR, true);
   listener.bind(new InternetAddress(host, port));
-  listener.listen(50);
+  listener.listen(10);
 
-  infof("prometheus metrics at http://%s:%d/metrics, registry: %s", host, port, registry);
+  infof("prometheus metrics at http://%s:%d/metrics", host, port);
 
-  auto gcFreeSize = registry.add(new Gauge("gc_free_size_bytes", "Free bytes on the GC heap"));
-  auto gcUsedSize = registry.add(new Gauge("gc_used_size_bytes", "Used bytes on the GC heap"));
-  auto gcMaxCollectionTime = registry.add(new Gauge("gc_max_collection_time",
-      "Largest time spent during GC cycle in µs"));
-  auto gcMaxPauseTime = registry.add(new Gauge("gc_max_pause_time", "Largest time paused during GC cycle in us"));
-  auto gcNumCollections = registry.add(new Gauge("gc_num_collections", "Total number of GC cycles"));
-  auto gcTotalCollectionTime = registry.add(new Gauge("gc_total_collection_time", "Total time spent doing GC in us"));
-  auto gcTotalPauseTime = registry.add(new Gauge("gc_total_pause_time", "Total time paused doing GC in us"));
+  auto gcFreeSize = registry.add(
+      new Gauge("gc_free_size_bytes", "Free bytes on the GC heap"));
+  auto gcUsedSize = registry.add(
+      new Gauge("gc_used_size_bytes", "Used bytes on the GC heap"));
+  auto gcMaxCollectionTime = registry.add(
+      new Gauge("gc_max_collection_time", "Largest time spent during GC cycle in usecs"));
+  auto gcMaxPauseTime = registry.add(
+      new Gauge("gc_max_pause_time", "Largest time paused during GC cycle in usecs"));
+  auto gcNumCollections = registry.add(
+      new Gauge("gc_num_collections", "Total number of GC cycles"));
+  auto gcTotalCollectionTime = registry.add(
+      new Gauge("gc_total_collection_time", "Total time spent doing GC in usecs"));
+  auto gcTotalPauseTime = registry.add(
+      new Gauge("gc_total_pause_time", "Total time paused doing GC in usecs"));
 
   while (true) {
     try {
@@ -80,7 +86,7 @@ void serveMetrics(Registry registry, ushort port = 8080, string host = "0.0.0.0"
         conn.send("HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n");
       }
     } catch (Exception ex) {
-      errorf("caught exception: %s", ex);
+      errorf("caught exception: %s", ex.message);
     }
   }
 }
@@ -92,7 +98,9 @@ unittest {
   import prometheus.counter;
 
   // Use a high random-ish port to avoid conflicts
-  ushort port = 18901;
+  ushort port = 18_901;
+
+  // (cast()sharedLog).logLevel = LogLevel.trace;
 
   auto reg = new Registry();
   auto c = reg.add(new Counter("test_requests", "Test counter"));

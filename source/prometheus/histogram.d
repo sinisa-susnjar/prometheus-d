@@ -7,6 +7,8 @@ import std.conv : to;
 
 import prometheus.metric;
 
+@safe:
+
 private struct Value {
 public:
   this(double[] buckets)
@@ -102,15 +104,15 @@ public:
 
         // Regular buckets
         foreach (i, limit; value.buckets()) {
-          string fullLabels = renderLabels(labels, _defaultLabels,
-            cast(immutable)["le": to!string(limit)]);
+          immutable bucket = ["le": to!string(limit)];
+          string fullLabels = renderLabels(labels, _defaultLabels, bucket);
           sb.put(format!"%s_bucket%s %s\n"(_name, fullLabels, value.counts[i]));
         }
 
         // +Inf bucket
         {
-          string fullLabels = renderLabels(labels, _defaultLabels,
-            cast(immutable)["le": "+Inf"]);
+          static immutable inf = ["le": "+Inf"];
+          string fullLabels = renderLabels(labels, _defaultLabels, inf);
           sb.put(format!"%s_bucket%s %s\n"(_name, fullLabels, value.totalCount));
         }
 

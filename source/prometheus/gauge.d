@@ -6,6 +6,8 @@ import std.array;
 
 import prometheus.metric;
 
+@safe:
+
 private struct Value {
 public:
   void inc(double v = 1) @nogc nothrow
