@@ -5,6 +5,8 @@
 Prometheus metrics library for the [D programming language](https://dlang.org/).
 Zero external dependencies — only the D standard library and runtime.
 
+See [here](./comparison.md) for a comparison with other D Prometheus implementations.
+
 ## Example
 
 ```d
